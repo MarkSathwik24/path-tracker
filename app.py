@@ -122,7 +122,7 @@ selected = option_menu(
     default_index=0,
     orientation="horizontal",
     styles={
-        "container": {"padding": "2px", "margin": "0!important", "background-color": "transparent"},
+        "container": {"padding": "1px", "margin": "1px", "background-color": "transparent"},
         "icon": {"font-size": "10px"},
         "nav-link": {"font-size": "5px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
         "nav-link-selected": {"background-color": "#1a73e8"},
