@@ -6,3 +6,4 @@ matplotlib
 scipy
 reportlab
 requests
+streamlit-option-menu
