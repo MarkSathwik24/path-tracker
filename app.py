@@ -102,6 +102,7 @@ st.markdown("""
             background-color: white;
             border-top: 1px solid #e6e6e6;
             border-left: 1px solid #e6e6e6;
+            padding-bottom: 10px;
             padding-left: 10px;
         }
     </style>
@@ -113,13 +114,13 @@ st.title("My Path Tracker")
 selected = option_menu(
     menu_title=None,
     options=["Daily", "Weekly", "History", "Settings"],
-    icons=["check2-square", "calendar-week", "clock-history", "gear"],
+    icons=["check1-square", "calendar-week", "clock-history", "gear"],
     default_index=0,
     orientation="vertical",
     styles={
         "container": {"padding": "0!important", "margin": "0!important", "background-color": "transparent"},
-        "icon": {"font-size": "18px"},
-        "nav-link": {"font-size": "12px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
+        "icon": {"font-size": "6px"},
+        "nav-link": {"font-size": "4px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
         "nav-link-selected": {"background-color": "#1a73e8"},
     }
 )
