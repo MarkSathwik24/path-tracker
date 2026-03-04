@@ -12,7 +12,7 @@ except Exception:
     # Fallback for testing
     base_url = "https://path-tracker-82d1a-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
-# FIX 1: Automatically format the Firebase link to end in .json
+# Automatically format the Firebase link to end in .json
 if base_url.endswith("/"):
     DB_URL = base_url + "path_data.json"
 elif not base_url.endswith(".json"):
@@ -52,7 +52,7 @@ def save_data(data):
 # --- THE ENGINE ---
 data = load_data()
 
-# FIX 2: Indian Standard Time (IST) 
+# Indian Standard Time (IST) 
 IST = timezone(timedelta(hours=5, minutes=30))
 ist_now = datetime.datetime.now(IST)
 today = str(ist_now.date())
@@ -180,4 +180,61 @@ with tab_history:
             for task, subs in day_log.items():
                 if subs: 
                     with st.expander(task):
-                        for sub, is_
+                        for sub, is_done in subs.items():
+                            status = "✅" if is_done else "❌"
+                            st.write(f"{status} {sub}")
+        else:
+             st.info(f"No tasks were logged on {selected_date_str}.")
+    else:
+        st.warning(f"No activity recorded for {selected_date_str}.")
+
+    st.divider()
+
+    # --- GOOGLE CALENDAR EMBED ---
+    st.header("📅 My Schedule")
+    
+    calendar_html = """
+    <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FKolkata&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=eW91ci5lbWFpbEBnbWFpbC5jb20&color=%23039BE5" 
+    style="border:solid 1px #777" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
+    """
+    st.markdown(calendar_html, unsafe_allow_html=True)
+
+# --- TAB 4: SETTINGS ---
+with tab_settings:
+    st.header("Configure Your Path")
+    st.write("Separate your subtasks with commas. **Click the '+' icon to add new tasks.**")
+    
+    def dict_to_df(task_dict):
+        return pd.DataFrame([
+            {"Task Name": k, "Subtasks (comma separated)": ", ".join(v)} 
+            for k, v in task_dict.items()
+        ])
+
+    st.subheader("Daily Configuration")
+    df_daily = dict_to_df(data["daily_tasks"])
+    edited_daily = st.data_editor(df_daily, num_rows="dynamic", use_container_width=True, key="edit_daily")
+    
+    st.subheader("Weekly Configuration")
+    df_weekly = dict_to_df(data["weekly_tasks"])
+    edited_weekly = st.data_editor(df_weekly, num_rows="dynamic", use_container_width=True, key="edit_weekly")
+    
+    if st.button("Save All Settings", type="primary"):
+        new_daily, new_weekly = {}, {}
+        
+        for _, row in edited_daily.iterrows():
+            name = str(row["Task Name"]).strip()
+            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
+            if name and subs and name != "nan":
+                new_daily[name] = subs
+                
+        for _, row in edited_weekly.iterrows():
+            name = str(row["Task Name"]).strip()
+            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
+            if name and subs and name != "nan":
+                new_weekly[name] = subs
+                
+        data["daily_tasks"] = new_daily
+        data["weekly_tasks"] = new_weekly
+        save_data(data)
+        st.success("Settings saved! Your paths have been updated.")
+        st.rerun()
