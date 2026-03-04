@@ -99,11 +99,11 @@ st.markdown("""
             left: 0;
             width: 60%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
-            background-color: white;
+            background-color: radium;
             border-top: 1px solid #e6e6e6;
             border-left: 1px solid #e6e6e6;
-            padding-bottom: 10px;
-            padding-left: 10px;
+            padding-bottom: 1px;
+            padding-left: 1px;
         }
     </style>
 """, unsafe_allow_html=True)
