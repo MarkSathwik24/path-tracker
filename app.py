@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import datetime
 from datetime import timedelta, timezone
-import calendar
 import requests
 
 # --- CLOUD DATABASE SETUP ---
@@ -87,7 +86,7 @@ save_data(data)
 st.set_page_config(page_title="My Path Tracker", layout="centered")
 st.title("My Path Tracker")
 
-tab_daily, tab_weekly, tab_history, tab_settings = st.tabs(["Daily Path", "Weekly Path", "Calendar & History", "Settings"])
+tab_daily, tab_weekly, tab_history, tab_settings = st.tabs(["Daily Path", "Weekly Path", "History", "Settings"])
 
 # --- TAB 1: DAILY PATH ---
 with tab_daily:
@@ -156,7 +155,7 @@ with tab_history:
     st.header("📈 Tracking History")
     
     st.subheader("Last 30 Days Trend")
-    last_30_days = [str(ist_now.date() - datetime.timedelta(days=i)) for i in range(29, -1, -1)]
+    last_30_days = [str(ist_now.date() - timedelta(days=i)) for i in range(29, -1, -1)]
     trend_data = {"Date": [], "Progress (%)": []}
     
     for d in last_30_days:
@@ -176,8 +175,10 @@ with tab_history:
     
     st.divider()
 
-    st.subheader("Inspect a Specific Date")
-    selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", st.session_state.inspect_date)
+    st.subheader("📅 Calendar & Daily Snapshot")
+    st.write("Tap the date box below to open the calendar and check your past progress.")
+    
+    selected_date = st.date_input("🗓️ Select Date", st.session_state.inspect_date)
     if selected_date != st.session_state.inspect_date:
         st.session_state.inspect_date = selected_date
         st.rerun()
@@ -206,59 +207,6 @@ with tab_history:
              st.info(f"No tasks were logged on {selected_date_str}.")
     else:
         st.warning(f"No activity recorded for {selected_date_str}.")
-
-    st.divider()
-
-    # --- RESPONSIVE HTML HEATMAP CALENDAR ---
-    st.subheader("📅 Progress Calendar")
-    
-    sel_year = st.session_state.inspect_date.year
-    sel_month = st.session_state.inspect_date.month
-    
-    cal = calendar.monthcalendar(sel_year, sel_month)
-    month_name = calendar.month_name[sel_month]
-    
-    st.write(f"### {month_name} {sel_year}")
-    
-    # Building the HTML table
-    html_cal = "<table style='width:100%; text-align:center; border-collapse: collapse; font-family: sans-serif;'>"
-    html_cal += "<tr>"
-    for day_name in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
-        html_cal += f"<th style='padding: 10px; border-bottom: 2px solid #555;'>{day_name}</th>"
-    html_cal += "</tr>"
-    
-    for week in cal:
-        html_cal += "<tr>"
-        for day in week:
-            if day == 0:
-                html_cal += "<td style='padding: 15px;'></td>"
-            else:
-                date_str = f"{sel_year}-{sel_month:02d}-{day:02d}"
-                bg_color = "transparent"
-                
-                # Check completion for color coding
-                if date_str in data["daily_logs"]:
-                    log = data["daily_logs"][date_str]
-                    d_total = sum(len(subs) for subs in log.values())
-                    d_comp = sum(sum(1 for v in subs.values() if v) for subs in log.values())
-                    if d_total > 0:
-                        pct = d_comp / d_total
-                        if pct == 1.0:
-                            bg_color = "rgba(76, 175, 80, 0.4)" # Green for 100%
-                        elif pct >= 0.5:
-                            bg_color = "rgba(255, 235, 59, 0.4)" # Yellow for >= 50%
-                        elif pct > 0:
-                            bg_color = "rgba(255, 152, 0, 0.4)" # Orange for > 0%
-                
-                is_today = (day == ist_now.day and sel_month == ist_now.month and sel_year == ist_now.year)
-                border = "2px solid #039BE5" if is_today else "1px solid #555"
-                font_weight = "bold" if is_today else "normal"
-                
-                html_cal += f"<td style='padding: 15px; border: {border}; background-color: {bg_color}; font-weight: {font_weight}; border-radius: 4px;'>{day}</td>"
-        html_cal += "</tr>"
-    html_cal += "</table>"
-    
-    st.markdown(html_cal, unsafe_allow_html=True)
 
 # --- TAB 4: SETTINGS ---
 with tab_settings:
