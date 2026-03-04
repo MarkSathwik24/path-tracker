@@ -193,6 +193,7 @@ with tab_history:
     # --- GOOGLE CALENDAR EMBED ---
     st.header("📅 My Schedule")
     
+    # Using st.markdown prevents the iframe from crashing when internal Google links are clicked
     calendar_html = """
     <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FKolkata&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=eW91ci5lbWFpbEBnbWFpbC5jb20&color=%23039BE5" 
     style="border:solid 1px #777" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
