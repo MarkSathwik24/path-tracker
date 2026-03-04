@@ -85,7 +85,7 @@ data["weekly_logs"][current_week] = {
 save_data(data)
 
 # --- APP LAYOUT ---
-st.set_page_config(page_title="Mark Tracker", layout="centered")
+st.set_page_config(page_title="My Path Tracker", layout="centered")
 
 # CSS Hack to push the menu to the absolute bottom and force it ON TOP of everything
 st.markdown("""
@@ -105,14 +105,14 @@ st.markdown("""
             /* "Radium" Neon Green */ 
             border-radius: 13px; 
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
-            box-shadow: 0px 0px 10px rgba(57, 255, 20, 0.9); 
+            box-shadow: 0px 0px 10px rgba(224, 0, 255, 0.9); 
             padding: 5px;
             bottom-padding: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("Mark Tracker")
+st.title("My Path Tracker")
 
 # --- BOTTOM NAVIGATION BAR ---
 selected = option_menu(
