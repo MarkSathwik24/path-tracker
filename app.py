@@ -95,24 +95,28 @@ st.markdown("""
         }
         iframe[title="streamlit_option_menu.option_menu"] {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 60%;
-            z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
-            background-color: #0d1b2a;
-            /* Deep black background */ 
-            border: 2px solid #0077b6; 
-            /* "Radium" Neon Green */ 
-            border-radius: 13px; 
-            /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
-            box-shadow: 0px 4px 15px rgba(0, 119, 182, 0.4); 
-            padding: 5px;
-            bottom-padding: 10px;
+            bottom: 30px;      /* Lifted off the edge to show the curves */
+            right: 30px;       /* Pinned to the right */
+            left: auto;
+            width: 350px;      /* Fixed width works best for the "pill" shape */
+            height: 80px;      /* Give it a set height for a better bezel look */
+            z-index: 9999999 !important; 
+            background-color: #0d1b2a; 
+            
+            /* --- THE CIRCULAR BEZEL LOOK --- */
+            border-radius: 50px;  /* Maxed out for a "Pill" or circular shape */
+            border: 1px solid #0077b6;
+            
+            /* Double shadow: 1st is the blue glow, 2nd is a sharp bottom bezel shadow */
+            box-shadow: 
+                0px 8px 20px rgba(0, 0, 0, 0.6), 
+                0px 0px 15px rgba(0, 119, 182, 0.3),
+                inset 0px 2px 5px rgba(255, 255, 255, 0.1); /* Inner highlight for bezel effect */
+            
+            padding: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
-
-st.title("My Path Tracker")
 
 # --- BOTTOM NAVIGATION BAR ---
 selected = option_menu(
@@ -122,10 +126,27 @@ selected = option_menu(
     default_index=0,
     orientation="horizontal",
     styles={
-        "container": {"padding": "1px", "margin": "0!important", "background-color": "transparent"},
-        "icon": {"font-size": "10px"},
-        "nav-link": {"font-size": "5px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
-        "nav-link-selected": {"background-color": "#1a73e8"},
+        "container": {
+            "padding": "0!important", 
+            "margin": "0!important", 
+            "background-color": "transparent"
+        },
+        "icon": {
+            "font-size": "14px",   /* Increased slightly for readability */
+            "color": "white"
+        },
+        "nav-link": {
+            "font-size": "10px",   /* Increased slightly from 5px (which is tiny!) */
+            "text-align": "center", 
+            "margin": "5px", 
+            "border-radius": "25px", /* Makes the individual button highlights circular too */
+            "color": "#caf0f8",
+            "--hover-color": "rgba(255, 255, 255, 0.1)"
+        },
+        "nav-link-selected": {
+            "background-color": "#1a73e8",
+            "box-shadow": "0px 2px 10px rgba(26, 115, 232, 0.5)" /* Glow on the selected tab */
+        },
     }
 )
 
