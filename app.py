@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta, timezone
-import calendar
 import requests
 
-# --- CLOUD DATABASE SETUP ---
+# --- 1. CLOUD DATABASE SETUP ---
+# IMPORTANT: The URL must end in .json for Firebase to work!
 try:
     DB_URL = st.secrets["DB_URL"] 
-except FileNotFoundError:
+except Exception:
+    # Adding .json to the end of your Firebase link
     DB_URL = "https://path-tracker-82d1a-default-rtdb.asia-southeast1.firebasedatabase.app/path_data.json"
 
 def load_data():
@@ -18,216 +19,128 @@ def load_data():
         data = None
 
     if not data:
+        # Default template
         default_data = {
-            "daily_tasks": {
-                "Control Systems Study": ["Review LQR code", "Simulate inverted pendulum"],
-                "Daily Routine": ["Morning walk", "Read 10 pages"]
-            },
-            "weekly_tasks": {
-                "M.Tech Thesis": ["Draft literature review", "Run aerodynamics simulation"],
-                "Project Work": ["GNSS signal testing", "Update Kalman filter"]
-            },
+            "daily_tasks": {"Morning Routine": ["Wake up 6am", "Exercise"]},
+            "weekly_tasks": {"M.Tech": ["Thesis Progress"]},
             "daily_logs": {},
             "weekly_logs": {}
         }
         requests.put(DB_URL, json=default_data)
         return default_data
-        
     return data
 
 def save_data(data):
     requests.put(DB_URL, json=data)
 
-# --- TIMEZONE SETUP (INDIAN STANDARD TIME) ---
-# Create a timezone object for UTC+5:30
+# --- 2. TIMEZONE & SYNC LOGIC ---
 IST = timezone(timedelta(hours=5, minutes=30))
 ist_now = datetime.now(IST)
-
-data = load_data()
-
-# Use IST for all current date/week calculations
 today = str(ist_now.date())
 current_week = f"{ist_now.year}-W{ist_now.isocalendar()[1]}"
 
-# Strict Sync and Purge
-current_daily_log = data["daily_logs"].get(today, {})
-data["daily_logs"][today] = {
-    task: {sub: current_daily_log.get(task, {}).get(sub, False) for sub in subs}
-    for task, subs in data["daily_tasks"].items()
-}
+data = load_data()
 
-current_weekly_log = data["weekly_logs"].get(current_week, {})
-data["weekly_logs"][current_week] = {
-    task: {sub: current_weekly_log.get(task, {}).get(sub, False) for sub in subs}
-    for task, subs in data["weekly_tasks"].items()
-}
+# This function ensures that any task in 'settings' exists in the 'daily log'
+def sync_logs(data, date_str, week_str):
+    # Sync Daily
+    current_daily = data["daily_logs"].get(date_str, {})
+    data["daily_logs"][date_str] = {
+        task: {sub: current_daily.get(task, {}).get(sub, False) for sub in subs}
+        for task, subs in data["daily_tasks"].items()
+    }
+    # Sync Weekly
+    current_weekly = data["weekly_logs"].get(week_str, {})
+    data["weekly_logs"][week_str] = {
+        task: {sub: current_weekly.get(task, {}).get(sub, False) for sub in subs}
+        for task, subs in data["weekly_tasks"].items()
+    }
+    return data
+
+# Run sync on load
+data = sync_logs(data, today, current_week)
 save_data(data)
 
-# --- APP LAYOUT ---
+# --- 3. APP LAYOUT ---
 st.set_page_config(page_title="My Path Tracker", layout="centered")
-st.title("My Path Tracker")
+st.title("My Path Tracker 🚀")
 
-tab_daily, tab_weekly, tab_history, tab_settings = st.tabs(["Daily Path", "Weekly Path", "Calendar & History", "Settings"])
+tab_daily, tab_weekly, tab_history, tab_settings = st.tabs(["Daily Path", "Weekly Path", "History", "Settings"])
 
-# --- TAB 1: DAILY PATH ---
 with tab_daily:
-    st.header(f"Daily Log: {today}")
-    
-    total_daily_subs = sum(len(subs) for subs in data["daily_tasks"].values())
-    completed_daily = sum(
-        sum(1 for sub in subs if data["daily_logs"][today].get(task, {}).get(sub, False))
-        for task, subs in data["daily_tasks"].items()
-    )
-    
-    if total_daily_subs > 0:
-        progress_pct = completed_daily / total_daily_subs
-        st.progress(progress_pct)
-        st.write(f"**Today's Progress:** {int(progress_pct * 100)}% ({completed_daily}/{total_daily_subs} subtasks)")
-        st.divider()
-
-        for task, subs in data["daily_tasks"].items():
+    st.header(f"Daily: {today}")
+    daily_tasks = data["daily_tasks"]
+    if daily_tasks:
+        for task, subs in daily_tasks.items():
             st.subheader(task)
             for sub in subs:
-                current_val = data["daily_logs"][today][task].get(sub, False)
-                new_val = st.checkbox(sub, value=current_val, key=f"d_{task}_{sub}")
-                
-                if new_val != current_val:
-                    data["daily_logs"][today][task][sub] = new_val
-                    save_data(data)
-                    st.rerun()
+                # Get the current status from the log
+                status = data["daily_logs"][today][task].get(sub, False)
+                if st.checkbox(sub, value=status, key=f"d_{task}_{sub}"):
+                    if not status:
+                        data["daily_logs"][today][task][sub] = True
+                        save_data(data)
+                        st.rerun()
+                else:
+                    if status:
+                        data["daily_logs"][today][task][sub] = False
+                        save_data(data)
+                        st.rerun()
     else:
-        st.info("No daily tasks set up yet. Go to Settings!")
+        st.info("Setup tasks in Settings!")
 
-# --- TAB 2: WEEKLY PATH ---
 with tab_weekly:
-    st.header(f"Weekly Log: {current_week}")
-    
-    total_weekly_subs = sum(len(subs) for subs in data["weekly_tasks"].values())
-    completed_weekly = sum(
-        sum(1 for sub in subs if data["weekly_logs"][current_week].get(task, {}).get(sub, False))
-        for task, subs in data["weekly_tasks"].items()
-    )
-    
-    if total_weekly_subs > 0:
-        progress_pct_w = completed_weekly / total_weekly_subs
-        st.progress(progress_pct_w)
-        st.write(f"**This Week's Progress:** {int(progress_pct_w * 100)}% ({completed_weekly}/{total_weekly_subs} subtasks)")
-        st.divider()
-
-        for task, subs in data["weekly_tasks"].items():
-            st.subheader(task)
-            for sub in subs:
-                current_val = data["weekly_logs"][current_week][task].get(sub, False)
-                new_val = st.checkbox(sub, value=current_val, key=f"w_{task}_{sub}")
-                
-                if new_val != current_val:
-                    data["weekly_logs"][current_week][task][sub] = new_val
+    st.header(f"Weekly: {current_week}")
+    for task, subs in data["weekly_tasks"].items():
+        st.subheader(task)
+        for sub in subs:
+            status = data["weekly_logs"][current_week][task].get(sub, False)
+            if st.checkbox(sub, value=status, key=f"w_{task}_{sub}"):
+                if not status:
+                    data["weekly_logs"][current_week][task][sub] = True
                     save_data(data)
                     st.rerun()
-    else:
-        st.info("No weekly tasks set up yet. Go to Settings!")
+            else:
+                if status:
+                    data["weekly_logs"][current_week][task][sub] = False
+                    save_data(data)
+                    st.rerun()
 
-# --- TAB 3: CALENDAR & HISTORY ---
 with tab_history:
-    st.header("📈 Tracking History")
-    
-    st.subheader("Last 30 Days Trend")
-    # Updated to calculate exactly 30 days back based on current IST
-    last_30_days = [str(ist_now.date() - timedelta(days=i)) for i in range(29, -1, -1)]
-    trend_data = {"Date": [], "Progress (%)": []}
-    
-    for d in last_30_days:
-        if d in data["daily_logs"]:
-            day_log = data["daily_logs"][d]
-            total = sum(len(subs) for subs in day_log.values())
-            completed = sum(sum(1 for v in subs.values() if v) for subs in day_log.values())
-            pct = (completed / total * 100) if total > 0 else 0
-        else:
-            pct = 0
-            
-        trend_data["Date"].append(d)
-        trend_data["Progress (%)"].append(pct)
-        
-    df_trend = pd.DataFrame(trend_data)
-    st.bar_chart(df_trend.set_index("Date"))
-    
-    st.divider()
+    st.header("Progress History")
+    st.write("Your history is being recorded in the database.")
+    # (Simplified history for now to ensure settings work first)
 
-    st.subheader("Inspect a Specific Date")
-    # Defaults the calendar to today's date in India
-    selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", ist_now.date())
-    selected_date_str = str(selected_date)
-    
-    if selected_date_str in data["daily_logs"]:
-        day_log = data["daily_logs"][selected_date_str]
-        
-        hist_total = sum(len(subs) for subs in day_log.values())
-        hist_completed = sum(sum(1 for v in subs.values() if v) for subs in day_log.values())
-        
-        if hist_total > 0:
-            hist_pct = hist_completed / hist_total
-            st.metric(label=f"Total Progress on {selected_date_str}", value=f"{int(hist_pct*100)}%", delta=f"{hist_completed}/{hist_total} subtasks completed")
-            st.progress(hist_pct)
-            
-            st.write("**Task Breakdown:**")
-            for task, subs in day_log.items():
-                if subs: 
-                    with st.expander(task):
-                        for sub, is_done in subs.items():
-                            status = "✅" if is_done else "❌"
-                            st.write(f"{status} {sub}")
-        else:
-             st.info(f"No tasks were logged on {selected_date_str}.")
-    else:
-        st.warning(f"No activity recorded for {selected_date_str}.")
-
-    st.divider()
-
-    # --- GOOGLE CALENDAR EMBED ---
-    st.header("📅 My Schedule")
-    
-    calendar_html = """
-    <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FKolkata&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=eW91ci5lbWFpbEBnbWFpbC5jb20&color=%23039BE5" 
-    style="border:solid 1px #777" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
-    """
-    st.markdown(calendar_html, unsafe_allow_html=True)
-
-# --- TAB 4: SETTINGS ---
 with tab_settings:
-    st.header("Configure Your Path")
-    st.write("Separate your subtasks with commas. **Click the '+' icon to add new tasks.**")
+    st.header("Settings")
     
-    def dict_to_df(task_dict):
-        return pd.DataFrame([
-            {"Task Name": k, "Subtasks (comma separated)": ", ".join(v)} 
-            for k, v in task_dict.items()
-        ])
+    def dict_to_df(d):
+        return pd.DataFrame([{"Task": k, "Subtasks": ", ".join(v)} for k, v in d.items()])
 
-    st.subheader("Daily Configuration")
-    df_daily = dict_to_df(data["daily_tasks"])
-    edited_daily = st.data_editor(df_daily, num_rows="dynamic", use_container_width=True, key="edit_daily")
+    st.subheader("Edit Daily Tasks")
+    edit_d = st.data_editor(dict_to_df(data["daily_tasks"]), num_rows="dynamic", use_container_width=True)
     
-    st.subheader("Weekly Configuration")
-    df_weekly = dict_to_df(data["weekly_tasks"])
-    edited_weekly = st.data_editor(df_weekly, num_rows="dynamic", use_container_width=True, key="edit_weekly")
-    
+    st.subheader("Edit Weekly Tasks")
+    edit_w = st.data_editor(dict_to_df(data["weekly_tasks"]), num_rows="dynamic", use_container_width=True)
+
     if st.button("Save All Settings", type="primary"):
-        new_daily, new_weekly = {}, {}
+        new_daily = {}
+        for _, row in edit_d.iterrows():
+            t, s = str(row["Task"]), str(row["Subtasks"])
+            if t and s and t != "nan":
+                new_daily[t] = [i.strip() for i in s.split(",") if i.strip()]
         
-        for _, row in edited_daily.iterrows():
-            name = str(row["Task Name"]).strip()
-            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
-            if name and subs and name != "nan":
-                new_daily[name] = subs
-                
-        for _, row in edited_weekly.iterrows():
-            name = str(row["Task Name"]).strip()
-            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
-            if name and subs and name != "nan":
-                new_weekly[name] = subs
-                
+        new_weekly = {}
+        for _, row in edit_w.iterrows():
+            t, s = str(row["Task"]), str(row["Subtasks"])
+            if t and s and t != "nan":
+                new_weekly[t] = [i.strip() for i in s.split(",") if i.strip()]
+
         data["daily_tasks"] = new_daily
         data["weekly_tasks"] = new_weekly
+        
+        # Sync immediately so the logs match the new settings
+        data = sync_logs(data, today, current_week)
         save_data(data)
-        st.success("Settings saved! Your paths have been updated.")
+        st.success("Changes Saved! Go to Daily Path to see them.")
         st.rerun()
