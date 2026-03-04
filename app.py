@@ -87,18 +87,18 @@ save_data(data)
 # --- APP LAYOUT ---
 st.set_page_config(page_title="My Path Tracker", layout="centered")
 
-# CSS Hack to push the menu to the absolute bottom of the screen
+# CSS Hack to push the menu to the absolute bottom and force it ON TOP of everything
 st.markdown("""
     <style>
         .block-container {
-            padding-bottom: 100px; /* Prevents content from hiding behind the nav bar */
+            padding-bottom: 100px; 
         }
         iframe[title="streamlit_option_menu.option_menu"] {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            z-index: 9999;
+            z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
             background-color: white;
             border-top: 1px solid #e6e6e6;
             padding-bottom: 10px;
