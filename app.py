@@ -95,7 +95,7 @@ st.markdown("""
         }
         iframe[title="streamlit_option_menu.option_menu"] {
             position: fixed;
-            bottom: auto;
+            bottom: 0;
             left: 0;
             width: 60%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
@@ -103,7 +103,7 @@ st.markdown("""
             /* Deep black background */ 
             border: 2px solid #0077b6; 
             /* "Radium" Neon Green */ 
-            border-radius: 20px; 
+            border-radius: 13px; 
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
             box-shadow: 0px 4px 15px rgba(0, 119, 182, 0.4); 
             padding: 5px;
@@ -122,7 +122,7 @@ selected = option_menu(
     default_index=0,
     orientation="horizontal",
     styles={
-        "container": {"padding": "0!important", "margin": "0!important", "background-color": "transparent"},
+        "container": {"padding": "5px", "margin": "0!important", "background-color": "transparent"},
         "icon": {"font-size": "10px"},
         "nav-link": {"font-size": "5px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
         "nav-link-selected": {"background-color": "#1a73e8"},
