@@ -47,7 +47,10 @@ def load_data():
     return data
 
 def save_data(data):
-    requests.put(DB_URL, json=data)
+    response = requests.put(DB_URL, json=data)
+    # This will print a big red error on your screen if Firebase blocks the save!
+    if response.status_code != 200:
+        st.error(f"Database Error: {response.text}")
 
 # --- THE ENGINE ---
 data = load_data()
