@@ -99,7 +99,7 @@ st.markdown("""
             left: 0;
             width: 60%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
-            background-color: #0d1b2a;
+            background-color: "transparent";
             /* Deep black background */ 
             border: 2px solid #0077b6; 
             /* "Radium" Neon Green */ 
