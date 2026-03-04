@@ -107,7 +107,7 @@ st.markdown("""
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
             box-shadow: 0px 0px 10px rgba(202, 240, 248, 0.5); 
             padding: 5px;
-            bottom-padding: 1px;
+            bottom-padding: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -122,7 +122,7 @@ selected = option_menu(
     default_index=0,
     orientation="horizontal",
     styles={
-        "container": {"padding": "1px", "margin": "0!important", "background-color": "transparent"},
+        "container": {"padding": "2px", "margin": "0!important", "background-color": "transparent"},
         "icon": {"font-size": "10px"},
         "nav-link": {"font-size": "5px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
         "nav-link-selected": {"background-color": "#1a73e8"},
