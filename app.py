@@ -4,6 +4,7 @@ import datetime
 from datetime import timedelta, timezone
 import calendar
 import requests
+from streamlit_option_menu import option_menu
 
 # --- CLOUD DATABASE SETUP ---
 try:
@@ -85,12 +86,45 @@ save_data(data)
 
 # --- APP LAYOUT ---
 st.set_page_config(page_title="My Path Tracker", layout="centered")
+
+# CSS Hack to push the menu to the absolute bottom of the screen
+st.markdown("""
+    <style>
+        .block-container {
+            padding-bottom: 100px; /* Prevents content from hiding behind the nav bar */
+        }
+        iframe[title="streamlit_option_menu.option_menu"] {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            background-color: white;
+            border-top: 1px solid #e6e6e6;
+            padding-bottom: 10px;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("My Path Tracker")
 
-tab_daily, tab_weekly, tab_history, tab_settings = st.tabs(["Daily Path", "Weekly Path", "History", "Settings"])
+# --- BOTTOM NAVIGATION BAR ---
+selected = option_menu(
+    menu_title=None,
+    options=["Daily", "Weekly", "History", "Settings"],
+    icons=["check2-square", "calendar-week", "clock-history", "gear"],
+    default_index=0,
+    orientation="horizontal",
+    styles={
+        "container": {"padding": "0!important", "margin": "0!important", "background-color": "transparent"},
+        "icon": {"font-size": "18px"},
+        "nav-link": {"font-size": "12px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
+        "nav-link-selected": {"background-color": "#1a73e8"},
+    }
+)
 
-# --- TAB 1: DAILY PATH ---
-with tab_daily:
+# --- PAGE ROUTING ---
+if selected == "Daily":
     st.header(f"Daily Log: {today}")
     
     total_daily_subs = sum(len(subs) for subs in data["daily_tasks"].values())
@@ -120,8 +154,7 @@ with tab_daily:
     else:
         st.info("No daily tasks set up yet. Go to Settings!")
 
-# --- TAB 2: WEEKLY PATH ---
-with tab_weekly:
+elif selected == "Weekly":
     st.header(f"Weekly Log: {current_week}")
     
     total_weekly_subs = sum(len(subs) for subs in data["weekly_tasks"].values())
@@ -151,8 +184,7 @@ with tab_weekly:
     else:
         st.info("No weekly tasks set up yet. Go to Settings!")
 
-# --- TAB 3: CALENDAR & HISTORY ---
-with tab_history:
+elif selected == "History":
     st.header("📈 Tracking History")
     
     st.subheader("Last 30 Days Trend")
@@ -179,7 +211,6 @@ with tab_history:
     st.subheader("📅 Daily Snapshot & Calendar")
     st.write("Use the box below to select a day. The visual calendar will highlight it for you!")
     
-    # The Date Picker acts as the "controller"
     selected_date = st.date_input("🗓️ Select Date", st.session_state.inspect_date)
     if selected_date != st.session_state.inspect_date:
         st.session_state.inspect_date = selected_date
@@ -212,8 +243,6 @@ with tab_history:
 
     st.divider()
 
-    # --- THE VISUAL STATIC CALENDAR ---
-    # Set to Sunday start to match Google Calendar look
     calendar.setfirstweekday(calendar.SUNDAY)
     sel_year = st.session_state.inspect_date.year
     sel_month = st.session_state.inspect_date.month
@@ -246,7 +275,6 @@ with tab_history:
                                sel_month == st.session_state.inspect_date.month and 
                                sel_year == st.session_state.inspect_date.year)
                 
-                # Format to check if data exists on this day
                 date_str = f"{sel_year}-{sel_month:02d}-{day:02d}"
                 has_progress = False
                 if date_str in data["daily_logs"]:
@@ -256,13 +284,10 @@ with tab_history:
                         has_progress = True
 
                 if is_selected:
-                    # Blue circle for selected day
                     cell_html = f"<div style='background-color: #1a73e8; color: white; border-radius: 50%; width: 34px; height: 34px; line-height: 34px; margin: auto; font-weight: bold;'>{day}</div>"
                 elif has_progress:
-                    # Tiny blue dot under the number if you completed tasks that day
                     cell_html = f"<div style='width: 34px; height: 34px; line-height: 34px; margin: auto; position: relative;'>{day}<span style='position:absolute; bottom:0px; left:15px; width:4px; height:4px; background-color:#1a73e8; border-radius:50%;'></span></div>"
                 else:
-                    # Normal day
                     cell_html = f"<div style='width: 34px; height: 34px; line-height: 34px; margin: auto;'>{day}</div>"
 
                 html_cal += f"<td style='padding: 8px 0;'>{cell_html}</td>"
@@ -271,8 +296,7 @@ with tab_history:
     
     st.markdown(html_cal, unsafe_allow_html=True)
 
-# --- TAB 4: SETTINGS ---
-with tab_settings:
+elif selected == "Settings":
     st.header("Configure Your Path")
     st.write("Separate your subtasks with commas. **Click the '+' icon to add new tasks.**")
     
