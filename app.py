@@ -97,7 +97,7 @@ st.markdown("""
             position: fixed;
             bottom: 0;
             left: 0;
-            width: 10%;
+            width: 50%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
             background-color: white;
             border-top: 1px solid #e6e6e6;
@@ -116,11 +116,11 @@ selected = option_menu(
     options=["Daily", "Weekly", "History", "Settings"],
     icons=["check1-square", "calendar-week", "clock-history", "gear"],
     default_index=0,
-    orientation="vertical",
+    orientation="horizontal",
     styles={
         "container": {"padding": "0!important", "margin": "0!important", "background-color": "transparent"},
-        "icon": {"font-size": "6px"},
-        "nav-link": {"font-size": "4px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
+        "icon": {"font-size": "10px"},
+        "nav-link": {"font-size": "10px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
         "nav-link-selected": {"background-color": "#1a73e8"},
     }
 )
