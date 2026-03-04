@@ -105,7 +105,7 @@ st.markdown("""
             /* "Radium" Neon Green */ 
             border-radius: 13px; 
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
-            box-shadow: 0px 0px 15px rgba(57, 255, 20, 0.5); 
+            box-shadow: 0px 0px 60px rgba(57, 255, 20, 0.3); 
             padding: 5px;
             bottom-padding: 10px;
         }
