@@ -115,7 +115,7 @@ selected = option_menu(
     options=["Daily", "Weekly", "History", "Settings"],
     icons=["check2-square", "calendar-week", "clock-history", "gear"],
     default_index=0,
-    orientation="horizontal",
+    orientation="vertical",
     styles={
         "container": {"padding": "0!important", "margin": "0!important", "background-color": "transparent"},
         "icon": {"font-size": "18px"},
