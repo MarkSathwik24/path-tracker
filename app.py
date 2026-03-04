@@ -117,7 +117,7 @@ st.title("My Path Tracker")
 # --- BOTTOM NAVIGATION BAR ---
 selected = option_menu(
     menu_title=None,
-    options=["Daily", "Weekly", "History", "Settings"],
+    options=["Daily", "Weekly", "Bargraph", "Settings"],
     icons=["check2-square", "calendar-week", "clock-history", "gear"],
     default_index=0,
     orientation="horizontal",
