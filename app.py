@@ -118,6 +118,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+st.title("My Path Tracker")
+
 # --- BOTTOM NAVIGATION BAR ---
 selected = option_menu(
     menu_title=None,
