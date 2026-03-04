@@ -99,13 +99,13 @@ st.markdown("""
             left: 0;
             width: 60%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
-            background-color: #0a0a0a;
+            background-color: #0d1b2a;
             /* Deep black background */ 
-            border: 2px solid #39FF14; 
+            border: 2px solid #0077b6; 
             /* "Radium" Neon Green */ 
-            border-radius: 15px; 
+            border-radius: 12px; 
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
-            box-shadow: 0px 0px 15px rgba(57, 255, 20, 0.5); 
+            box-shadow: 0px 4px 15px rgba(0, 119, 182, 0.4); 
             padding: 5px;
         }
     </style>
