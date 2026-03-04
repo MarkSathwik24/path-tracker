@@ -71,6 +71,10 @@ ist_now = datetime.datetime.now(IST)
 today = str(ist_now.date())
 current_week = f"{ist_now.year}-W{ist_now.isocalendar()[1]}"
 
+# Session State for Calendar Clicking
+if "inspect_date" not in st.session_state:
+    st.session_state.inspect_date = ist_now.date()
+
 # Strict Sync and Purge
 current_daily_log = data["daily_logs"].get(today, {})
 data["daily_logs"][today] = {
@@ -107,7 +111,6 @@ with tab_daily:
         st.write(f"**Today's Progress:** {int(progress_pct * 100)}% ({completed_daily}/{total_daily_subs} subtasks)")
         st.divider()
 
-        # Loops through the Memory Array to preserve exact top-to-bottom order
         for task in data["daily_task_names"]:
             if task in data["daily_tasks"]:
                 subs = data["daily_tasks"][task]
@@ -180,8 +183,14 @@ with tab_history:
     st.divider()
 
     st.subheader("Inspect a Specific Date")
-    selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", ist_now.date())
-    selected_date_str = str(selected_date)
+    
+    # Links the date picker to the session state so the calendar below can update it
+    selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", st.session_state.inspect_date)
+    if selected_date != st.session_state.inspect_date:
+        st.session_state.inspect_date = selected_date
+        st.rerun()
+        
+    selected_date_str = str(st.session_state.inspect_date)
     
     if selected_date_str in data["daily_logs"]:
         day_log = data["daily_logs"][selected_date_str]
@@ -208,14 +217,31 @@ with tab_history:
 
     st.divider()
 
-    # --- GOOGLE CALENDAR EMBED ---
-    st.header("📅 My Schedule")
+    # --- NATIVE BUILT-IN CALENDAR ---
+    st.subheader("📅 Monthly Calendar")
     
-    calendar_html = """
-    <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FKolkata&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=eW91ci5lbWFpbEBnbWFpbC5jb20&color=%23039BE5" 
-    style="border:solid 1px #777" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
-    """
-    st.markdown(calendar_html, unsafe_allow_html=True)
+    sel_year = st.session_state.inspect_date.year
+    sel_month = st.session_state.inspect_date.month
+    
+    cal = calendar.monthcalendar(sel_year, sel_month)
+    month_name = calendar.month_name[sel_month]
+    
+    st.write(f"### {month_name} {sel_year}")
+    
+    days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    cols = st.columns(7)
+    for i, day_name in enumerate(days_of_week):
+        cols[i].markdown(f"<div style='text-align: center'><b>{day_name}</b></div>", unsafe_allow_html=True)
+        
+    for week in cal:
+        cols = st.columns(7)
+        for i, day in enumerate(week):
+            if day != 0:
+                is_today = (day == ist_now.day and sel_month == ist_now.month and sel_year == ist_now.year)
+                # If a day button is clicked, it changes the inspector date above and reloads the page!
+                if cols[i].button(str(day), type="primary" if is_today else "secondary", use_container_width=True, key=f"cal_{sel_year}_{sel_month}_{day}"):
+                    st.session_state.inspect_date = datetime.date(sel_year, sel_month, day)
+                    st.rerun()
 
 # --- TAB 4: SETTINGS ---
 with tab_settings:
@@ -227,7 +253,6 @@ with tab_settings:
         for k in order_list:
             if k in task_dict:
                 rows.append({"Task Name": k, "Subtasks (comma separated)": ", ".join(task_dict[k])})
-        # Catch any out-of-order ones just in case
         for k, v in task_dict.items():
             if k not in order_list:
                 rows.append({"Task Name": k, "Subtasks (comma separated)": ", ".join(v)})
@@ -245,7 +270,6 @@ with tab_settings:
         new_daily, new_weekly = {}, {}
         daily_order, weekly_order = [], []
         
-        # Pull exact top-to-bottom order from the Daily table
         for _, row in edited_daily.iterrows():
             raw_name = str(row["Task Name"]).strip()
             name = sanitize_key(raw_name) 
@@ -255,7 +279,6 @@ with tab_settings:
                 if name not in daily_order:
                     daily_order.append(name)
                 
-        # Pull exact top-to-bottom order from the Weekly table
         for _, row in edited_weekly.iterrows():
             raw_name = str(row["Task Name"]).strip()
             name = sanitize_key(raw_name) 
