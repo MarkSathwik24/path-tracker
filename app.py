@@ -96,7 +96,6 @@ st.markdown("""
         iframe[title="streamlit_option_menu.option_menu"] {
             position: fixed;
             bottom: 0;
-            right: auto;
             left: 0;
             width: 40%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
