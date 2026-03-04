@@ -95,9 +95,9 @@ st.markdown("""
         }
         iframe[title="streamlit_option_menu.option_menu"] {
             position: fixed;
-            bottom: 0.01;
+            bottom: 0.00001;
             left: 0;
-            width: 100%;
+            width: 50%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
             background-color: white;
             border-top: 1px solid #e6e6e6;
