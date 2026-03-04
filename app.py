@@ -97,7 +97,7 @@ st.markdown("""
             position: fixed;
             bottom: 0;
             left: 0;
-            width: 50%;
+            width: 60%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
             background-color: white;
             border-top: 1px solid #e6e6e6;
