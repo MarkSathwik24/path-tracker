@@ -103,7 +103,7 @@ st.markdown("""
             /* Deep black background */ 
             border: 2px solid #0077b6; 
             /* "Radium" Neon Green */ 
-            border-radius: 12px; 
+            border-radius: 10px; 
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
             box-shadow: 0px 4px 15px rgba(0, 119, 182, 0.4); 
             padding: 5px;
