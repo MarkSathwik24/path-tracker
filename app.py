@@ -101,7 +101,7 @@ st.markdown("""
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
             background-color: radium;
             border-top: 1px solid #e6e6e6;
-            border-left: 1px solid #e6e6e6;
+            border-right: 1px solid #e6e6e6;
             padding-bottom: 1px;
             padding-left: 1px;
         }
