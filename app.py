@@ -9,16 +9,20 @@ import requests
 try:
     base_url = st.secrets["DB_URL"] 
 except Exception:
-    # Fallback for testing
     base_url = "https://path-tracker-82d1a-default-rtdb.asia-southeast1.firebasedatabase.app/"
 
-# Automatically format the Firebase link to end in .json
 if base_url.endswith("/"):
     DB_URL = base_url + "path_data.json"
 elif not base_url.endswith(".json"):
     DB_URL = base_url + "/path_data.json"
 else:
     DB_URL = base_url
+
+# Helper to prevent Firebase crashes
+def sanitize_key(key_str):
+    for char in ['.', '$', '#', '[', ']', '/']:
+        key_str = key_str.replace(char, '')
+    return key_str.strip()
 
 def load_data():
     try:
@@ -28,14 +32,14 @@ def load_data():
         data = None
 
     if not data:
-        # Default template setup
+        # Default template setup (Removed the period in MTech)
         default_data = {
             "daily_tasks": {
                 "Control Systems Study": ["Review LQR code", "Simulate inverted pendulum"],
                 "Daily Routine": ["Morning walk", "Read 10 pages"]
             },
             "weekly_tasks": {
-                "M.Tech Thesis": ["Draft literature review", "Run aerodynamics simulation"],
+                "MTech Thesis": ["Draft literature review", "Run aerodynamics simulation"],
                 "Project Work": ["GNSS signal testing", "Update Kalman filter"]
             },
             "daily_logs": {},
@@ -48,14 +52,12 @@ def load_data():
 
 def save_data(data):
     response = requests.put(DB_URL, json=data)
-    # This will print a big red error on your screen if Firebase blocks the save!
     if response.status_code != 200:
         st.error(f"Database Error: {response.text}")
 
 # --- THE ENGINE ---
 data = load_data()
 
-# Indian Standard Time (IST) 
 IST = timezone(timedelta(hours=5, minutes=30))
 ist_now = datetime.datetime.now(IST)
 today = str(ist_now.date())
@@ -196,7 +198,6 @@ with tab_history:
     # --- GOOGLE CALENDAR EMBED ---
     st.header("📅 My Schedule")
     
-    # Using st.markdown prevents the iframe from crashing when internal Google links are clicked
     calendar_html = """
     <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FKolkata&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=eW91ci5lbWFpbEBnbWFpbC5jb20&color=%23039BE5" 
     style="border:solid 1px #777" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
@@ -226,13 +227,15 @@ with tab_settings:
         new_daily, new_weekly = {}, {}
         
         for _, row in edited_daily.iterrows():
-            name = str(row["Task Name"]).strip()
+            raw_name = str(row["Task Name"]).strip()
+            name = sanitize_key(raw_name)  # Clean the name!
             subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
             if name and subs and name != "nan":
                 new_daily[name] = subs
                 
         for _, row in edited_weekly.iterrows():
-            name = str(row["Task Name"]).strip()
+            raw_name = str(row["Task Name"]).strip()
+            name = sanitize_key(raw_name)  # Clean the name!
             subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
             if name and subs and name != "nan":
                 new_weekly[name] = subs
