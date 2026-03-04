@@ -118,7 +118,7 @@ st.title("My Path Tracker")
 selected = option_menu(
     menu_title=None,
     options=["Daily", "Weekly", "History", "Settings"],
-    icons=["check2-square", "calendar-week", "bar-chart", "gear"],
+    icons=["check2-square", "calendar-week", "activity", "gear"],
     default_index=0,
     orientation="horizontal",
     styles={
