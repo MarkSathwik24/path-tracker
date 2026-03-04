@@ -205,4 +205,29 @@ with tab_settings:
 
     st.subheader("Daily Configuration")
     df_daily = dict_to_df(data["daily_tasks"])
-    edited_daily = st.data_editor(df_daily, num_rows="dynamic", use_container_width=True, key="edit_
+    edited_daily = st.data_editor(df_daily, num_rows="dynamic", use_container_width=True, key="edit_daily")
+    
+    st.subheader("Weekly Configuration")
+    df_weekly = dict_to_df(data["weekly_tasks"])
+    edited_weekly = st.data_editor(df_weekly, num_rows="dynamic", use_container_width=True, key="edit_weekly")
+    
+    if st.button("Save All Settings", type="primary"):
+        new_daily, new_weekly = {}, {}
+        
+        for _, row in edited_daily.iterrows():
+            name = str(row["Task Name"]).strip()
+            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
+            if name and subs and name != "nan":
+                new_daily[name] = subs
+                
+        for _, row in edited_weekly.iterrows():
+            name = str(row["Task Name"]).strip()
+            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
+            if name and subs and name != "nan":
+                new_weekly[name] = subs
+                
+        data["daily_tasks"] = new_daily
+        data["weekly_tasks"] = new_weekly
+        save_data(data)
+        st.success("Settings saved! Your paths have been updated.")
+        st.rerun()
