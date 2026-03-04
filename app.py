@@ -91,16 +91,18 @@ st.set_page_config(page_title="My Path Tracker", layout="centered")
 st.markdown("""
     <style>
         .block-container {
-            padding-bottom: 100px; 
+            padding-bottom: 200px; 
         }
         iframe[title="streamlit_option_menu.option_menu"] {
             position: fixed;
             bottom: 0;
-            left: 0;
-            width: 50%;
+            right: 0;
+            left: auto;
+            width: 40%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
             background-color: white;
             border-top: 1px solid #e6e6e6;
+            border-left: 1px solid #e6e6e6;
             padding-bottom: 10px;
         }
     </style>
