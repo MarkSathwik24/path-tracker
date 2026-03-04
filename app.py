@@ -18,7 +18,6 @@ elif not base_url.endswith(".json"):
 else:
     DB_URL = base_url
 
-# Helper to prevent Firebase crashes from special characters
 def sanitize_key(key_str):
     for char in ['.', '$', '#', '[', ']', '/']:
         key_str = key_str.replace(char, '')
@@ -32,7 +31,6 @@ def load_data():
         data = None
 
     if not data:
-        # Default template setup
         default_data = {
             "daily_task_names": ["Control Systems Study", "Daily Routine"],
             "daily_tasks": {
@@ -49,7 +47,6 @@ def load_data():
         }
         requests.put(DB_URL, json=default_data)
         return default_data
-        
     return data
 
 def save_data(data):
@@ -60,7 +57,6 @@ def save_data(data):
 # --- THE ENGINE ---
 data = load_data()
 
-# Ensure older versions of the database get the memory array
 if "daily_task_names" not in data:
     data["daily_task_names"] = list(data.get("daily_tasks", {}).keys())
 if "weekly_task_names" not in data:
@@ -71,11 +67,9 @@ ist_now = datetime.datetime.now(IST)
 today = str(ist_now.date())
 current_week = f"{ist_now.year}-W{ist_now.isocalendar()[1]}"
 
-# Session State for Calendar Clicking
 if "inspect_date" not in st.session_state:
     st.session_state.inspect_date = ist_now.date()
 
-# Strict Sync and Purge
 current_daily_log = data["daily_logs"].get(today, {})
 data["daily_logs"][today] = {
     task: {sub: current_daily_log.get(task, {}).get(sub, False) for sub in subs}
@@ -183,8 +177,6 @@ with tab_history:
     st.divider()
 
     st.subheader("Inspect a Specific Date")
-    
-    # Links the date picker to the session state so the calendar below can update it
     selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", st.session_state.inspect_date)
     if selected_date != st.session_state.inspect_date:
         st.session_state.inspect_date = selected_date
@@ -217,8 +209,8 @@ with tab_history:
 
     st.divider()
 
-    # --- NATIVE BUILT-IN CALENDAR ---
-    st.subheader("📅 Monthly Calendar")
+    # --- RESPONSIVE HTML HEATMAP CALENDAR ---
+    st.subheader("📅 Progress Calendar")
     
     sel_year = st.session_state.inspect_date.year
     sel_month = st.session_state.inspect_date.month
@@ -228,20 +220,45 @@ with tab_history:
     
     st.write(f"### {month_name} {sel_year}")
     
-    days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    cols = st.columns(7)
-    for i, day_name in enumerate(days_of_week):
-        cols[i].markdown(f"<div style='text-align: center'><b>{day_name}</b></div>", unsafe_allow_html=True)
-        
+    # Building the HTML table
+    html_cal = "<table style='width:100%; text-align:center; border-collapse: collapse; font-family: sans-serif;'>"
+    html_cal += "<tr>"
+    for day_name in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
+        html_cal += f"<th style='padding: 10px; border-bottom: 2px solid #555;'>{day_name}</th>"
+    html_cal += "</tr>"
+    
     for week in cal:
-        cols = st.columns(7)
-        for i, day in enumerate(week):
-            if day != 0:
+        html_cal += "<tr>"
+        for day in week:
+            if day == 0:
+                html_cal += "<td style='padding: 15px;'></td>"
+            else:
+                date_str = f"{sel_year}-{sel_month:02d}-{day:02d}"
+                bg_color = "transparent"
+                
+                # Check completion for color coding
+                if date_str in data["daily_logs"]:
+                    log = data["daily_logs"][date_str]
+                    d_total = sum(len(subs) for subs in log.values())
+                    d_comp = sum(sum(1 for v in subs.values() if v) for subs in log.values())
+                    if d_total > 0:
+                        pct = d_comp / d_total
+                        if pct == 1.0:
+                            bg_color = "rgba(76, 175, 80, 0.4)" # Green for 100%
+                        elif pct >= 0.5:
+                            bg_color = "rgba(255, 235, 59, 0.4)" # Yellow for >= 50%
+                        elif pct > 0:
+                            bg_color = "rgba(255, 152, 0, 0.4)" # Orange for > 0%
+                
                 is_today = (day == ist_now.day and sel_month == ist_now.month and sel_year == ist_now.year)
-                # If a day button is clicked, it changes the inspector date above and reloads the page!
-                if cols[i].button(str(day), type="primary" if is_today else "secondary", use_container_width=True, key=f"cal_{sel_year}_{sel_month}_{day}"):
-                    st.session_state.inspect_date = datetime.date(sel_year, sel_month, day)
-                    st.rerun()
+                border = "2px solid #039BE5" if is_today else "1px solid #555"
+                font_weight = "bold" if is_today else "normal"
+                
+                html_cal += f"<td style='padding: 15px; border: {border}; background-color: {bg_color}; font-weight: {font_weight}; border-radius: 4px;'>{day}</td>"
+        html_cal += "</tr>"
+    html_cal += "</table>"
+    
+    st.markdown(html_cal, unsafe_allow_html=True)
 
 # --- TAB 4: SETTINGS ---
 with tab_settings:
