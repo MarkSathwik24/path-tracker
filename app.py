@@ -107,7 +107,7 @@ st.markdown("""
             /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
             box-shadow: 0px 0px 10px rgba(202, 240, 248, 0.5); 
             padding: 5px;
-            bottom-padding: 10px;
+            bottom-padding: 1px;
         }
     </style>
 """, unsafe_allow_html=True)
