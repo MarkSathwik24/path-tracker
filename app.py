@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 from datetime import timedelta, timezone
+import calendar
 import requests
 
 # --- CLOUD DATABASE SETUP ---
@@ -175,9 +176,10 @@ with tab_history:
     
     st.divider()
 
-    st.subheader("📅 Calendar & Daily Snapshot")
-    st.write("Tap the date box below to open the calendar and check your past progress.")
+    st.subheader("📅 Daily Snapshot & Calendar")
+    st.write("Use the box below to select a day. The visual calendar will highlight it for you!")
     
+    # The Date Picker acts as the "controller"
     selected_date = st.date_input("🗓️ Select Date", st.session_state.inspect_date)
     if selected_date != st.session_state.inspect_date:
         st.session_state.inspect_date = selected_date
@@ -207,6 +209,67 @@ with tab_history:
              st.info(f"No tasks were logged on {selected_date_str}.")
     else:
         st.warning(f"No activity recorded for {selected_date_str}.")
+
+    st.divider()
+
+    # --- THE VISUAL STATIC CALENDAR ---
+    # Set to Sunday start to match Google Calendar look
+    calendar.setfirstweekday(calendar.SUNDAY)
+    sel_year = st.session_state.inspect_date.year
+    sel_month = st.session_state.inspect_date.month
+    
+    cal = calendar.monthcalendar(sel_year, sel_month)
+    month_name = calendar.month_name[sel_month]
+    
+    html_cal = f"""
+    <div style="padding: 10px; border: 1px solid rgba(128,128,128,0.2); border-radius: 10px;">
+        <h3 style="text-align: center; margin-top: 0; font-family: sans-serif;">{month_name} {sel_year}</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: center; font-family: sans-serif; font-size: 16px;">
+            <tr style="font-size: 14px; opacity: 0.7;">
+                <th style="padding-bottom: 15px; font-weight: normal;">S</th>
+                <th style="padding-bottom: 15px; font-weight: normal;">M</th>
+                <th style="padding-bottom: 15px; font-weight: normal;">T</th>
+                <th style="padding-bottom: 15px; font-weight: normal;">W</th>
+                <th style="padding-bottom: 15px; font-weight: normal;">T</th>
+                <th style="padding-bottom: 15px; font-weight: normal;">F</th>
+                <th style="padding-bottom: 15px; font-weight: normal;">S</th>
+            </tr>
+    """
+    
+    for week in cal:
+        html_cal += "<tr>"
+        for day in week:
+            if day == 0:
+                html_cal += "<td></td>"
+            else:
+                is_selected = (day == st.session_state.inspect_date.day and 
+                               sel_month == st.session_state.inspect_date.month and 
+                               sel_year == st.session_state.inspect_date.year)
+                
+                # Format to check if data exists on this day
+                date_str = f"{sel_year}-{sel_month:02d}-{day:02d}"
+                has_progress = False
+                if date_str in data["daily_logs"]:
+                    day_log = data["daily_logs"][date_str]
+                    completed = sum(sum(1 for v in subs.values() if v) for subs in day_log.values())
+                    if completed > 0:
+                        has_progress = True
+
+                if is_selected:
+                    # Blue circle for selected day
+                    cell_html = f"<div style='background-color: #1a73e8; color: white; border-radius: 50%; width: 34px; height: 34px; line-height: 34px; margin: auto; font-weight: bold;'>{day}</div>"
+                elif has_progress:
+                    # Tiny blue dot under the number if you completed tasks that day
+                    cell_html = f"<div style='width: 34px; height: 34px; line-height: 34px; margin: auto; position: relative;'>{day}<span style='position:absolute; bottom:0px; left:15px; width:4px; height:4px; background-color:#1a73e8; border-radius:50%;'></span></div>"
+                else:
+                    # Normal day
+                    cell_html = f"<div style='width: 34px; height: 34px; line-height: 34px; margin: auto;'>{day}</div>"
+
+                html_cal += f"<td style='padding: 8px 0;'>{cell_html}</td>"
+        html_cal += "</tr>"
+    html_cal += "</table></div>"
+    
+    st.markdown(html_cal, unsafe_allow_html=True)
 
 # --- TAB 4: SETTINGS ---
 with tab_settings:
