@@ -99,11 +99,14 @@ st.markdown("""
             left: 0;
             width: 60%;
             z-index: 9999999 !important; /* Cranked up to bury the Manage App button */
-            background-color: radium;
-            border-top: 1px solid #e6e6e6;
-            border-right: 1px solid #e6e6e6;
-            padding-bottom: 1px;
-            padding-left: 1px;
+            background-color: #0a0a0a;
+            /* Deep black background */ 
+            border: 2px solid #39FF14; 
+            /* "Radium" Neon Green */ 
+            border-radius: 15px; 
+            /* Rounded corners for a modern feel */ /* The "Radium" Glow Effect */ 
+            box-shadow: 0px 0px 15px rgba(57, 255, 20, 0.5); 
+            padding: 5px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -118,7 +121,7 @@ selected = option_menu(
     default_index=0,
     orientation="horizontal",
     styles={
-        "container": {"padding": "0!important", "text-align": "center", "margin": "0!important", "background-color": "transparent"},
+        "container": {"padding": "0!important", "margin": "0!important", "background-color": "transparent"},
         "icon": {"font-size": "10px"},
         "nav-link": {"font-size": "5px", "text-align": "center", "margin":"0px", "--hover-color": "#f0f2f6"},
         "nav-link-selected": {"background-color": "#1a73e8"},
