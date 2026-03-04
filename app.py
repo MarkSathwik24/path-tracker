@@ -85,7 +85,7 @@ data["weekly_logs"][current_week] = {
 save_data(data)
 
 # --- APP LAYOUT ---
-st.set_page_config(page_title="My Path Tracker", layout="centered")
+st.set_page_config(page_title="Mark Tracker", layout="centered")
 
 # CSS Hack to push the menu to the absolute bottom and force it ON TOP of everything
 st.markdown("""
@@ -112,7 +112,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("My Path Tracker")
+st.title("Mark Tracker")
 
 # --- BOTTOM NAVIGATION BAR ---
 selected = option_menu(
