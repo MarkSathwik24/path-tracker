@@ -1,17 +1,14 @@
 import streamlit as st
 import pandas as pd
-import datetime
+from datetime import datetime, timedelta, timezone
 import calendar
 import requests
 
 # --- CLOUD DATABASE SETUP ---
-# Streamlit will securely read this URL from its Cloud Servers
 try:
-    # Make sure your URL ends with /path_data.json
     DB_URL = st.secrets["DB_URL"] 
 except FileNotFoundError:
-    # If running locally without secrets, paste your Firebase URL here for testing:
-    DB_URL = "https://path-tracker-82d1a-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    DB_URL = "https://path-tracker-82d1a-default-rtdb.asia-southeast1.firebasedatabase.app/path_data.json"
 
 def load_data():
     try:
@@ -21,7 +18,6 @@ def load_data():
         data = None
 
     if not data:
-        # Default template setup
         default_data = {
             "daily_tasks": {
                 "Control Systems Study": ["Review LQR code", "Simulate inverted pendulum"],
@@ -42,11 +38,16 @@ def load_data():
 def save_data(data):
     requests.put(DB_URL, json=data)
 
-# --- The rest of your app code remains exactly the same below this line ---
+# --- TIMEZONE SETUP (INDIAN STANDARD TIME) ---
+# Create a timezone object for UTC+5:30
+IST = timezone(timedelta(hours=5, minutes=30))
+ist_now = datetime.now(IST)
 
 data = load_data()
-today = str(datetime.date.today())
-current_week = f"{datetime.date.today().year}-W{datetime.date.today().isocalendar()[1]}"
+
+# Use IST for all current date/week calculations
+today = str(ist_now.date())
+current_week = f"{ist_now.year}-W{ist_now.isocalendar()[1]}"
 
 # Strict Sync and Purge
 current_daily_log = data["daily_logs"].get(today, {})
@@ -131,7 +132,8 @@ with tab_history:
     st.header("📈 Tracking History")
     
     st.subheader("Last 30 Days Trend")
-    last_30_days = [str(datetime.date.today() - datetime.timedelta(days=i)) for i in range(29, -1, -1)]
+    # Updated to calculate exactly 30 days back based on current IST
+    last_30_days = [str(ist_now.date() - timedelta(days=i)) for i in range(29, -1, -1)]
     trend_data = {"Date": [], "Progress (%)": []}
     
     for d in last_30_days:
@@ -152,7 +154,8 @@ with tab_history:
     st.divider()
 
     st.subheader("Inspect a Specific Date")
-    selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", datetime.date.today())
+    # Defaults the calendar to today's date in India
+    selected_date = st.date_input("🗓️ Select a date to view your end-of-day snapshot", ist_now.date())
     selected_date_str = str(selected_date)
     
     if selected_date_str in data["daily_logs"]:
@@ -183,7 +186,6 @@ with tab_history:
     # --- GOOGLE CALENDAR EMBED ---
     st.header("📅 My Schedule")
     
-    # Using st.markdown prevents the iframe from crashing when internal Google links are clicked
     calendar_html = """
     <iframe src="https://calendar.google.com/calendar/embed?height=500&wkst=1&bgcolor=%23ffffff&ctz=Asia%2FKolkata&showTitle=0&showNav=1&showDate=1&showPrint=0&showTabs=0&showCalendars=0&showTz=0&src=eW91ci5lbWFpbEBnbWFpbC5jb20&color=%23039BE5" 
     style="border:solid 1px #777" width="100%" height="500" frameborder="0" scrolling="no"></iframe>
@@ -203,29 +205,4 @@ with tab_settings:
 
     st.subheader("Daily Configuration")
     df_daily = dict_to_df(data["daily_tasks"])
-    edited_daily = st.data_editor(df_daily, num_rows="dynamic", use_container_width=True, key="edit_daily")
-    
-    st.subheader("Weekly Configuration")
-    df_weekly = dict_to_df(data["weekly_tasks"])
-    edited_weekly = st.data_editor(df_weekly, num_rows="dynamic", use_container_width=True, key="edit_weekly")
-    
-    if st.button("Save All Settings", type="primary"):
-        new_daily, new_weekly = {}, {}
-        
-        for _, row in edited_daily.iterrows():
-            name = str(row["Task Name"]).strip()
-            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
-            if name and subs and name != "nan":
-                new_daily[name] = subs
-                
-        for _, row in edited_weekly.iterrows():
-            name = str(row["Task Name"]).strip()
-            subs = [s.strip() for s in str(row["Subtasks (comma separated)"]).split(",") if s.strip()]
-            if name and subs and name != "nan":
-                new_weekly[name] = subs
-                
-        data["daily_tasks"] = new_daily
-        data["weekly_tasks"] = new_weekly
-        save_data(data)
-        st.success("Settings saved! Your paths have been updated.")
-        st.rerun()
+    edited_daily = st.data_editor(df_daily, num_rows="dynamic", use_container_width=True, key="edit_
